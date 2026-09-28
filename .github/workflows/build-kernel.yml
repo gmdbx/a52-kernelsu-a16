@@ -17,11 +17,10 @@ jobs:
               libelf-dev bc python3 git wget ccache lld patch
 
       - name: Download AOSP Clang Toolchain
-        run: |
-          mkdir -p ~/clang
-          wget -q https://github.com/UDP-dev/aosp-clang/releases/download/17.0.4-release/aosp-clang-17.0.4.tar.gz -O clang.tar.gz
-          tar -xzf clang.tar.gz -C ~/clang
-          rm clang.tar.gz
+        uses: xyz-prjkt/actions-setup-clang@v3
+        with:
+          version: '17.0.4'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Inject KernelSU-Next and SUSFS
         run: |
@@ -43,7 +42,6 @@ jobs:
         run: |
           export ARCH=arm64
           export SUBARCH=arm64
-          export PATH="$HOME/clang/bin:$PATH"
           
           CONFIG_FILE="a52xq_defconfig" 
 
