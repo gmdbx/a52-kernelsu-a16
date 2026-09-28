@@ -1,0 +1,75 @@
+name: Build KSU-Next + SUSFS (Linux 4.14) for A52
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout Kernel Source
+        uses: actions/checkout@v4
+
+      - name: Setup Environment & Dependencies
+        run: |
+          sudo apt update && sudo apt install -y \
+              build-essential libncurses-dev bison flex libssl-dev \
+              libelf-dev bc python3 git wget ccache lld patch
+
+      - name: Download AOSP Clang Toolchain
+        run: |
+          git clone https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/clang-r416183b --depth=1 ~/clang
+
+      - name: Inject KernelSU-Next and SUSFS
+        run: |
+          curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next/kernel/setup.sh" | bash -s next
+          git clone https://gitlab.com/simonpunk/kernel_patches.git --depth=1 -b 4.14 susfs_patches
+          
+          if [ -d "fs/susfs" ]; then
+              echo "SUSFS already present or copied"
+          else
+              cp -r susfs_patches/50_add_susfs_in_kernel-4.14/fs/susfs fs/ || true
+          fi
+
+          for f in susfs_patches/50_add_susfs_in_kernel-4.14/*.patch; do
+              echo "Applying $f"
+              patch -p1 < "$f" || echo "Warning: patch $f had issues"
+          done
+
+      - name: Start Kernel Compilation
+        run: |
+          export ARCH=arm64
+          export SUBARCH=arm64
+          export PATH="$HOME/clang/bin:$PATH"
+          
+          CONFIG_FILE="a52xq_defconfig" 
+
+          make O=out $CONFIG_FILE
+          
+          echo "CONFIG_KSU=y" >> out/.config
+          echo "CONFIG_KSU_SUSFS=y" >> out/.config
+          echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> out/.config
+          echo "CONFIG_KSU_SUSFS_SUS_MOUNT=y" >> out/.config
+
+          make O=out CC=clang LD=ld.lld -j$(nproc)
+
+      - name: Prepare AnyKernel3 & Pack
+        run: |
+          git clone https://github.com/osm0sis/AnyKernel3.git anykernel
+          
+          if [ -f "out/arch/arm64/boot/Image" ]; then
+              cp out/arch/arm64/boot/Image anykernel/
+          else
+              echo "Error: Image not found!"
+              exit 1
+          fi
+
+          cd anykernel
+          rm -rf .git README.md
+          zip -r9 ../KSU-Next-SUSFS-Android14-A52.zip *
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: KSU-Next-SUSFS-Android14-A52
+          path: KSU-Next-SUSFS-Android14-A52.zip
