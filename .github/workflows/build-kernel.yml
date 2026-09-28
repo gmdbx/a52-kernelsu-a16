@@ -18,7 +18,19 @@ jobs:
 
       - name: Download AOSP Clang Toolchain
         run: |
-          git clone https://github.com/chenxiaolong/Toolchains.git --depth=1 -b clang-17 ~/clang
+          mkdir -p ~/clang
+          # Скачиваем официальный архив пребилдов Clang от Google (версия r475365 / Clang 16-17)
+          wget -qO clang.tar.gz "https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-r475365.tar.gz" || \
+          wget -qO clang.tar.gz "https://gitlab.com/crdroidandroid/android_prebuilts_clang_host_linux-x86_aosp-clang/-/archive/14.0/android_prebuilts_clang_host_linux-x86_aosp-clang-14.0.tar.gz" || \
+          git clone https://github.com/akhilnarang/scripts.git ~/toolchain_scripts
+          
+          # Распаковываем скачанный архив в папку ~/clang
+          if [ -f "clang.tar.gz" ]; then
+              tar -xzf clang.tar.gz -C ~/clang
+          else
+              # Запасной вариант: клонирование легкого зеркала без указания проблемных веток
+              git clone https://github.com/LineageOS/android_prebuilts_clang_host_linux-x86_aosp-clang.git --depth=1 ~/clang
+          fi
 
       - name: Inject KernelSU-Next and SUSFS
         run: |
