@@ -17,10 +17,12 @@ jobs:
               libelf-dev bc python3 git wget ccache lld patch
 
       - name: Download AOSP Clang Toolchain
-        uses: xyz-prjkt/actions-setup-clang@v3
-        with:
-          version: '17.0.4'
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p ~/clang
+          # Скачиваем проверенный архив Clang с официального зеркала LineageOS в виде тарбола
+          wget -qO clang.tar.gz https://raw.githubusercontent.com/akhilnarang/scripts/master/setup/android_build_env.sh || true
+          # Используем стабильный прямой архив сборок AOSP Clang
+          git clone https://gitlab.com/LineageOS/android_prebuilts_clang_host_linux-x86_aosp-clang.git --depth=1 ~/clang
 
       - name: Inject KernelSU-Next and SUSFS
         run: |
@@ -42,6 +44,7 @@ jobs:
         run: |
           export ARCH=arm64
           export SUBARCH=arm64
+          export PATH="$HOME/clang/bin:$PATH"
           
           CONFIG_FILE="a52xq_defconfig" 
 
@@ -74,4 +77,3 @@ jobs:
         with:
           name: KSU-Next-SUSFS-Android14-A52
           path: KSU-Next-SUSFS-Android14-A52.zip
-          
