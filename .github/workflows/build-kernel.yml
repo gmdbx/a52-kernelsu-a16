@@ -18,11 +18,7 @@ jobs:
 
       - name: Download AOSP Clang Toolchain
         run: |
-          mkdir -p ~/clang
-          # Скачиваем проверенный архив Clang с официального зеркала LineageOS в виде тарбола
-          wget -qO clang.tar.gz https://raw.githubusercontent.com/akhilnarang/scripts/master/setup/android_build_env.sh || true
-          # Используем стабильный прямой архив сборок AOSP Clang
-          git clone https://gitlab.com/LineageOS/android_prebuilts_clang_host_linux-x86_aosp-clang.git --depth=1 ~/clang
+          git clone https://github.com/chenxiaolong/Toolchains.git --depth=1 -b clang-17 ~/clang
 
       - name: Inject KernelSU-Next and SUSFS
         run: |
