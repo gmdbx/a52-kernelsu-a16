@@ -18,8 +18,9 @@ jobs:
 
       - name: Download AOSP Clang Toolchain
         run: |
+          git clone https://gitlab.com/LineageOS/android_prebuilts_clang_host_linux-x86_aosp-clang compiler --depth=1
           mkdir -p ~/clang
-          wget -qO- "https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/tags/android-12.0.0_r34/clang-r416183b.tar.gz" | tar -xz -C ~/clang
+          mv compiler/* ~/clang/
 
       - name: Inject KernelSU-Next and SUSFS
         run: |
