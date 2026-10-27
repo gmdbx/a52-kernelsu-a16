@@ -22,10 +22,14 @@ jobs:
 
       - name: Clone kernel
         run: |
-          git clone https://github.com/${{ github.repository }} kernel
-          cd kernel
-          git checkout f6bbda4e5986
-          # если патчи в отдельной ветке твоего форка, чекауть её вместо этого
+         git clone --filter=blob:none --no-checkout \
+         https://github.com/LineageOS/android_kernel_samsung_sm7125.git kernel
+         cd kernel
+         git fetch --no-tags origin \
+         f6bbda4e5986f09e4d51ceffd1b645b2d5aa75b4
+         git checkout --detach f6bbda4e5986f09e4d51ceffd1b645b2d5aa75b4
+         git status
+         git log -1 --oneline
 
       - name: KernelSU Next
         run: |
